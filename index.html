@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para mi Lucí 🌹</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet">
+    <style>
+        /* RESET DE ESTILOS PARA EVITAR ERRORES */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: #0d0508;
+            font-family: 'Lora', serif;
+            color: #fdf0f3;
+            overflow: hidden;
+        }
+
+        #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        .scene {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 1.2s ease;
+            padding: 20px;
+        }
+        .scene.active { opacity: 1; pointer-events: auto; }
+
+        /* ESCENA 0: SOBRE */
+        .env-container { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+        .envelope {
+            position: relative;
+            width: 280px; height: 180px;
+            background: #9b2b3a;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .envelope::after {
+            content: ''; position: absolute; top: 0;
+            border-top: 100px solid #c0394b;
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            transform-origin: top; transition: transform 0.6s ease;
+            z-index: 2;
+        }
+        .envelope.open::after { transform: rotateX(180deg); }
+        .seal-gold {
+            width: 45px; height: 45px; background: #d4af37; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #5c4412; font-size: 1.2rem; z-index: 3;
+            box-shadow: 0 0 15px rgba(212,175,55,0.4);
+        }
+
+        /* ESCENA 1: ACERTIJO */
+        .riddle-box {
+            background: rgba(255, 255, 255, 0.05); padding: 35px 25px;
+            border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
+            text-align: center; max-width: 320px;
+        }
+
+        /* ESCENA 2: CHAT */
+        .chat-wrap { display: flex; flex-direction: column; width: 100%; max-width: 340px; gap: 15px; }
+        .msg { padding: 15px 20px; border-radius: 20px; opacity: 0; transform: translateY(15px); transition: 0.8s; font-size: 1rem; }
+        .msg.visible { opacity: 1; transform: translateY(0); }
+        .msg.t { align-self: flex-start; background: rgba(255,255,255,0.1); border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        .msg.m { align-self: flex-end; background: #c0394b; border-bottom-right-radius: 4px; }
+
+        /* ESCENA 3: CARTA GIGANTE */
+        #sc3 { background: #fdf4ee; color: #3d262a; overflow-y: auto; display: block; }
+        .letter-body { max-width: 600px; margin: 0 auto; padding: 100px 30px; }
+        .letter-body h1 { font-family: 'Playfair Display'; font-size: 2.5rem; color: #7a1f35; margin-bottom: 50px; font-style: italic; text-align: center; }
+        .p-reveal { 
+            opacity: 0; 
+            transition: 2.5s ease; 
+            margin-bottom: 40px; 
+            line-height: 2; 
+            font-size: 1.3rem; 
+            text-align: justify;
+        }
+        .p-reveal.visible { opacity: 1; }
+
+        /* ESCENA 4: RECUERDOS */
+        .memory-tag {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            padding: 25px 35px; border-radius: 20px;
+            color: #e8c49a; font-size: 1.2rem;
+            animation: float 4s ease-in-out infinite alternate;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .memory-tag span { font-size: 2.5rem; }
+
+        /* BOTONES */
+        .btn {
+            background: #d4af37; color: #0d0508; border: none;
+            padding: 18px 40px; border-radius: 50px;
+            font-weight: bold; text-transform: uppercase;
+            cursor: pointer; font-size: 0.9rem; margin-top: 30px;
+            transition: 0.3s;
+        }
+
+        /* CORAZÓN */
+        #heart { font-size: 6rem; cursor: pointer; transition: 0.2s; filter: drop-shadow(0 0 15px #c0394b); }
+        .petal { position: fixed; pointer-events: none; z-index: 99; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+        @keyframes float { from { transform: translateY(0); } to { transform: translateY(-15px); } }
+    </style>
+</head>
+<body>
+    <audio id="musica" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <canvas id="stars"></canvas>
+
+    <div class="scene active" id="sc0">
+        <div class="env-container">
+            <div class="envelope" id="env" onclick="openEnv()">
+                <div class="seal-gold">❤</div>
+            </div>
+            <p style="color:#e8c49a; letter-spacing:5px; font-size:0.8rem;">PARA MI LUCÍ</p>
+        </div>
+    </div>
+
+    <div class="scene" id="sc1">
+        <div class="riddle-box">
+            <h2 style="font-family:'Playfair Display'; margin-bottom:20px; font-size:1.8rem;">La Llave</h2>
+            <p style="opacity:0.8; line-height:1.6;">"Suma el día de tu nacimiento con el mío para entrar..."</p>
+            <button class="btn" onclick="checkCode()">Descifrar</button>
+        </div>
+    </div>
+
+    <div class="scene" id="sc2">
+        <div class="chat-wrap">
+            <div class="msg t" data-msg><small style="color:#d4af37">Lucí:</small><br>"Hola... me gusta mucho tu voz" ✨</div>
+            <div class="msg m" data-msg><small style="color:#fdf4ee">Tenitmer:</small><br>"Muchas gracias... ¿te gustaría jugar conmigo?"</div>
+            <div class="msg t" data-msg><small style="color:#d4af37">Lucí:</small><br>"Está bien, pero aviso que no soy tan buena..."</div>
+            <div class="msg m" data-msg><small style="color:#fdf4ee">Tenitmer:</small><br>"No importa. A tu lado, todo es mejor."</div>
+            <button class="btn" onclick="goto(3)" style="opacity:0; align-self:center;" id="btnEnter">Leer mi carta</button>
+        </div>
+    </div>
+
+    <div class="scene" id="sc3">
+        <div class="letter-body">
+            <h1>Mi niña guerrera...</h1>
+            <p class="p-reveal" data-p>A veces me detengo a pensar en lo increíble que es el destino. ¿Qué probabilidad había de que coincidiéramos en ese directo, en ese mapa, en ese preciso instante? Yo solo estaba ahí, perdido en la rutina, hasta que apareció tu mensaje diciendo que te gustaba mi voz. No tenías idea de que esa voz empezaría a cobrar sentido solo cuando tú la escucharas.</p>
+            <p class="p-reveal" data-p>Nuestra historia no empezó en un café o en una plaza, empezó entre disparos y estrategias. Y aunque parezca solo un juego, para mí fue el lugar donde descubrí tu risa. Esa risa que por el micrófono lograba calmar mis peores días. Me dijiste que no eras "tan buena", pero Lucí, desde el primer segundo fuiste la mejor persona que pude conocer.</p>
+            <p class="p-reveal" data-p>Lo que más valoro de ti es esa nobleza que llevas contigo. Me sorprende cómo, a pesar de tus responsabilidades, tus estudios y el esfuerzo que le pones a tu universidad, siempre tienes un espacio para preocuparte por mí y hacerme sentir especial. Ver la dedicación que le pones a todo lo que haces me hace admirarte cada día más. Eres una mujer excepcional.</p>
+            <p class="p-reveal" data-p>Sé que a veces la distancia pesa y que el no poder vernos a los ojos puede ser difícil. Pero quiero que sepas algo: haberte encontrado es el mejor regalo que me ha dado la vida. No importa cuántos kilómetros nos separen hoy, mi mente siempre está contigo.</p>
+            <p class="p-reveal" data-p>Gracias por la paciencia, por el apoyo incondicional y por ser mi equipo en todas las facetas de la vida. Eres mi niña guerrera, y te prometo que cada día trabajo para que el momento de abrazarte llegue pronto.</p>
+            <p class="p-reveal" data-p>Te amo más de lo que cualquier palabra puede expresar, Lucí. Gracias por ser tú, simplemente tú.</p>
+            <div style="text-align:center; padding-bottom:100px;">
+                <button class="btn" onclick="goto(4)" style="background:#7a1f35; color:white;">Nuestros Momentos →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="scene" id="sc4" style="flex-direction:column; text-align:center;">
+        <h2 style="font-family:'Playfair Display'; margin-bottom:50px; font-style:italic;">Ecos de Memoria</h2>
+        <div style="display:flex; flex-direction:column; gap:20px; align-items:center;">
+            <div class="memory-tag"><span>✨</span><small>Ese primer encuentro</small></div>
+            <div class="memory-tag"><span>🎙️</span><small>Tu voz al otro lado</small></div>
+            <div class="memory-tag"><span>❤</span><small>Tu apoyo incondicional</small></div>
+        </div>
+        <button class="btn" onclick="goto(5)">Llenar mi corazón</button>
+    </div>
+
+    <div class="scene" id="sc5" style="flex-direction:column;">
+        <div id="heart" onclick="tHeart()">❤</div>
+        <h2 id="hcount" style="font-family:'Playfair Display'; font-size:4rem; margin-top:20px;">0</h2>
+    </div>
+
+    <div class="scene" id="sc6" style="flex-direction:column; text-align:center;">
+        <h1 style="font-family:'Playfair Display'; font-size:3rem; font-style:italic;">Feliz San Valentín</h1>
+        <p style="margin-top:20px; color:#e8c49a; font-size:1.5rem; font-family:'Lora', serif; font-style:italic;">
+            "Te amo mucho, mi pequeña..."
+        </p>
+        <p style="margin-top:40px; color:#c0394b; letter-spacing:3px; font-weight:600; font-size:1rem; padding: 0 20px; text-transform: uppercase;">
+            Eres mi lugar favorito en el mundo
+        </p>
+        <p style="font-size:0.75rem; margin-top:80px; opacity:0.3;">TENITMER ♡ 2026</p>
+    </div>
+
+    <script>
+        const cv=document.getElementById('stars'), cx=cv.getContext('2d');
+        let W, H;
+        function rsz(){ W=cv.width=window.innerWidth; H=cv.height=window.innerHeight; }
+        window.addEventListener('resize', rsz); rsz();
+        function draw(){
+            cx.clearRect(0,0,W,H); cx.fillStyle="white";
+            for(let i=0;i<60;i++) cx.fillRect(Math.random()*W, Math.random()*H, 1.2, 1.2);
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        function openEnv() {
+            document.getElementById('musica').play().catch(e => console.log("Audio listo"));
+            document.getElementById('env').classList.add('open');
+            setTimeout(() => goto(1), 800);
+        }
+
+        function checkCode() {
+            if(prompt("Suma de días (Nacimientos):") === "31") goto(2);
+            else alert("Vuelve a intentarlo...");
+        }
+
+        function goto(n) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById('sc' + n);
+            target.classList.add('active');
+            
+            if(n === 2) {
+                const msgs = document.querySelectorAll('[data-msg]');
+                msgs.forEach((m, i) => setTimeout(() => m.classList.add('visible'), i * 1600));
+                setTimeout(() => {
+                    const btn = document.getElementById('btnEnter');
+                    btn.style.opacity = 1;
+                    btn.style.transition = "1s";
+                }, 6500);
+            }
+            if(n === 3) {
+                target.scrollTop = 0;
+                const ps = document.querySelectorAll('[data-p]');
+                ps.forEach((p, i) => setTimeout(() => p.classList.add('visible'), i * 4000));
+            }
+        }
+
+        let taps = 0;
+        function tHeart() {
+            const h = document.getElementById('heart');
+            h.style.transform = "scale(1.4)";
+            setTimeout(() => h.style.transform = "scale(1)", 100);
+            taps++;
+            document.getElementById('hcount').innerText = taps;
+            const p = document.createElement('div');
+            p.className = 'petal'; p.innerText = '🌹';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            document.body.appendChild(p);
+            if(taps >= 10) setTimeout(() => goto(6), 500);
+        }
+    </script>
+</body>
+</html>
